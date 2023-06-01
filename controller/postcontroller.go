@@ -28,8 +28,10 @@ func CreatePost(c *fiber.Ctx) error {
 }
 
 func AllPost(c *fiber.Ctx) error {
+	var limitfloat64 float64
 	page, _ := strconv.Atoi(c.Query("page", "1"))
-	limit := 5
+	limit, _ := strconv.Atoi(c.Query("limit", "2"))
+	limitfloat64 = float64(limit)
 	offset := (page - 1) * limit
 	var total int64
 	var getblog []models.Blog
@@ -40,8 +42,17 @@ func AllPost(c *fiber.Ctx) error {
 		"meta": fiber.Map{
 			"total":     total,
 			"page":      page,
-			"list_page": math.Ceil(float64(int(total) / limit)),
+			"last_page": math.Ceil(float64(total) / limitfloat64),
 		},
 	})
 
+}
+
+func DetailPost(c *fiber.Ctx) error {
+	id, _ := strconv.Atoi(c.Params("id"))
+	var blogpost models.Blog
+	database.DB.Where("id=?", id).Preload("User").First(&blogpost)
+	return c.JSON(fiber.Map{
+		"data": blogpost,
+	})
 }
